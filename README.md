@@ -8,7 +8,7 @@
 ## Get started
 
 ```
-	git clone <link of this repository>
+	git clone https://github.com/luamoris/template.git
 	cd template
 	npm i
 	npm start
@@ -78,5 +78,5 @@
 [stylelint]: https://stylelint.io/
 [eslint]: https://eslint.org/
 
-[logo]: src/img/box.svg
-[github]: https://github.com/luamoris
+[logo]: https://raw.githubusercontent.com/luamoris/template/634e93615165ca5dcbc2fc80a3562b116e01262f/src/img/box.svg
+[github]: https://github.com/luamoris/template
