@@ -19,7 +19,7 @@
 ## For build
 
 ```
-	npm run dev		// development
+	npm run dev 	// development
 	npm run build	// production
 ```
 
