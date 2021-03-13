@@ -1,7 +1,7 @@
 [![Logo Template][logo]][github]
 
 # Prerequisites 
-`Node.js (^10.12.0, or >=12.0.0)`
+> #### Node.js (^10.12.0, or >=12.0.0)
 
 ---
 
@@ -48,16 +48,16 @@
 # Additionally for the VS Code
 
 ### Extensions 
-`settings.json`
+> #### `settings.json`
 
-- ESLint
+> - #### ESLint
 
-- stylelint
+> - #### stylelint
 ```
 	"stylelint.ignoreDisables": true,
 ```
 
-- Live Sass Compiler
+> - #### Live Sass Compiler
 ```
 	"liveSassCompile.settings.generateMap": false,
 	"liveSassCompile.settings.formats": [
