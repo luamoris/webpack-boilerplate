@@ -48,7 +48,7 @@
 # Additionally for the VS Code
 
 ### Extensions 
-> #### `settings.json`
+__`settings.json`__
 
 > - #### ESLint
 
