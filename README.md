@@ -5,40 +5,28 @@
 
 ---
 
-## Get started
+#### Get `started`
 
-```
+```console
 	git clone https://github.com/luamoris/template.git
 	cd template
 	npm i
 	npm start
 ```
 
----
+#### For `build`
 
-## For build
-
-```
+```console
 	npm run dev 	// development
 	npm run build	// production
 ```
 
----
+#### For `lint`
 
-## For stats
+> - [stylelint][stylelint]
+> - [eslint][eslint]
 
-```
-	npm run stats	// create stats.json
-```
-
----
-
-## For Lint
-
-- [stylelint][stylelint]
-- [eslint][eslint]
-
-```
+```console
 	npm run lint		// lint Javascript files
 	npm run stylelint	// lint SCSS files
 ```
@@ -48,30 +36,19 @@
 # Additionally for the VS Code
 
 ### Extensions 
-__`settings.json`__
 
 > - #### ESLint
 
-> - #### stylelint
-```
+> - #### Stylelint
+
+`settings.json`
+
+```json
 	"stylelint.ignoreDisables": true,
 ```
 
-> - #### Live Sass Compiler
-```
-	"liveSassCompile.settings.generateMap": false,
-	"liveSassCompile.settings.formats": [
-		{
-			"format": "expanded",
-			"extensionName": ".css",
-			"savePath": "./src/css"
-		}
-	],
-	"liveSassCompile.settings.autoprefix": [
-		"> 1%",
-		"last 5 versions"
-	]
-```
+
+
 
 --- 
 

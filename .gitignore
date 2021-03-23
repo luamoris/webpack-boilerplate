@@ -1,6 +1,7 @@
 # Ignore folders
-node_modules
-build
+/node_modules
+/build
+/dist
 
 # Ignore files
 stats.json

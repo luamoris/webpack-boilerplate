@@ -1,171 +1,255 @@
+// ======================================================================================
+
 const path = require('path');
-const HTMLWebpackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+
+// Files
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const TerserWebpackPlugin = require('terser-webpack-plugin');
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+
+// Minify
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const ImageminPlugin = require('imagemin-webpack-plugin').default;
 const BabelMinifyPlugin = require('babel-minify-webpack-plugin');
+const TerserWebpackPlugin = require('terser-webpack-plugin');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
-const isDevMode = process.env.NODE_ENV === 'development';
-const isProdMode = !isDevMode;
+// ======================================================================================
 
-const filename = (ext) => isDevMode ? `${ext}/[name].${ext}` : `${ext}/[name].[hash].${ext}`;
-
-const optimization = () => {
-	const config = {
-		splitChunks: {
-			chunks: 'all',
-		},
-	};
-	if (isProdMode) {
-		config.minimizer = [
-			new TerserWebpackPlugin(),
-			new OptimizeCssAssetsPlugin({
-				cssProcessorOptions: { discardComments: { removeAll: true } },
-			}),
-		];
-	}
-	return config;
+const MODE = {
+	CURRENT: process.env.NODE_ENV,
+	isDEVELOPMENT: process.env.NODE_ENV === 'development',
+	isPRODUCTION: process.env.NODE_ENV === 'production',
 };
 
-const plugins = () => {
-	const base = [
-		new HTMLWebpackPlugin({
-			template: './index.html',
-			filename: './index.html',
-			minify: {
-				collapseWhitespace: isProdMode,
-				minifyCSS: isProdMode,
-				removeComments: isProdMode,
-			},
+// ======================================================================================
+
+// Resolve
+const resolvePath = (relativePath) => path.resolve(__dirname, relativePath);
+
+// Filename
+const getFilePath = (dir, title, exp) => `${dir}/${exp}/${MODE.isPRODUCTION ? `${title}.[contenthash:8].${exp}` : MODE.isDEVELOPMENT && `${title}.${exp}`}`;
+const getFileChunk = (dir, title, exp) => `${dir}/${exp}/${MODE.isPRODUCTION ? `${title}.[contenthash:8].chunk.${exp}` : MODE.isDEVELOPMENT && `${title}.chunk.${exp}`}`;
+
+// ======================================================================================
+
+const PATH = {
+	ENTRY: {
+		MAIN: resolvePath('src/app.js'),
+	},
+	INPUT: {
+		HTML: resolvePath('src/index.html'),
+		IMG: resolvePath('src/img/'),
+	},
+	OUTPUT: {
+		DIR: resolvePath('dist'),
+		HTML: 'index.html',
+		JS: {
+			NAME: getFilePath('static', 'bundle', 'js'),
+			CHUCK: getFileChunk('static', 'bundle', 'js'),
+		},
+		CSS: {
+			TYPE: 'text/css',
+			NAME: getFilePath('static', 'style', 'css'),
+			CHUCK: getFileChunk('static', 'style', 'css'),
+			PUBLICK: '../../',
+		},
+		IMG: 'img/',
+		MEDIA: 'assets/',
+		FONTS: 'fonts/',
+	},
+};
+
+const TEST = {
+	SCSS: /\.s[ac]ss$/,
+	IMG: /\.(png|jpe?g|svg|gif)$/,
+	FONTS: /\.(woff|woff2|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,
+	JS: /\.js$/,
+};
+
+// ======================================================================================
+
+// PLUGINS
+const getPlugins = () => {
+	const htmlWebpack = {
+		template: PATH.INPUT.HTML,
+		filename: PATH.OUTPUT.HTML,
+	};
+	MODE.isPRODUCTION ? htmlWebpack.minify = {
+		removeComments: true,
+		collapseWhitespace: true,
+		removeRedundantAttributes: true,
+		useShortDoctype: true,
+		removeEmptyAttributes: true,
+		removeStyleLinkTypeAttributes: true,
+		keepClosingSlash: true,
+		minifyJS: true,
+		minifyCSS: true,
+		minifyURLs: true,
+	} : undefined;
+
+	const plugins = [
+
+		new MiniCssExtractPlugin({
+			linkType: PATH.OUTPUT.CSS.TYPE,
+			filename: PATH.OUTPUT.CSS.NAME,
+			chunkFilename: PATH.OUTPUT.CSS.CHUCK,
 		}),
-		new CopyWebpackPlugin({
+
+		new HtmlWebpackPlugin(htmlWebpack),
+
+		new CopyPlugin({
 			patterns: [
-				{ from: './img/', to: 'img/' },
+				{ from: PATH.INPUT.IMG, to: PATH.OUTPUT.IMG },
 			],
 		}),
-		new MiniCssExtractPlugin({
-			filename: filename('css'),
-			chunkFilename: isDevMode ? 'css/[id].[hash].css' : 'css/[id].css',
-		}),
-		new ImageminPlugin({
-			disable: isDevMode,
-			test: /\.(jpe?g|png|gif|svg)$/i,
-			optipng: { optimizationLevel: 3 },
-			jpegtran: { progressive: true },
-			gifsicle: { optimizationLevel: 1 },
-			svgo: {},
-		}),
+
 	];
-	if (isProdMode) {
-		base.push(
+
+	if (MODE.isPRODUCTION) {
+		plugins.push(
+			new ImageminPlugin({
+				disable: true,
+				test: TEST.IMG,
+				optipng: { optimizationLevel: 3 },
+				jpegtran: { progressive: true },
+				gifsicle: { optimizationLevel: 1 },
+				svgo: {},
+			}),
 			new BundleAnalyzerPlugin({
 				analyzerMode: 'disabled',
 			}),
 			new BabelMinifyPlugin(),
 		);
 	}
-	return base;
+
+	return plugins;
 };
 
-const cssLoaders = (ext) => {
+// CSS LOADERS
+const cssLoaders = (preProcessor) => {
 	const loaders = [
 		{
 			loader: MiniCssExtractPlugin.loader,
 			options: {
-				publicPath: '../',
+				publicPath: PATH.OUTPUT.CSS.PUBLICK,
 			},
 		},
-		'css-loader',
+		{
+			loader: 'css-loader',
+			options: {},
+		},
+		{
+			loader: 'postcss-loader',
+			options: {},
+		},
 	];
-	if (ext) { loaders.push(ext); }
+	if (preProcessor) {
+		loaders.push(preProcessor);
+	}
 	return loaders;
 };
 
-const babelOptions = (preset) => {
-	const opts = {
-		presets: ['@babel/preset-env'],
-		plugins: [],
-	};
-	if (preset) { opts.presets.push(preset); }
-	return opts;
-};
-
-const output = () => {
-	const out = {
-		filename: filename('js'),
-		path: path.resolve(__dirname, 'build'),
-	};
-	if (isProdMode) { out.publicPath = './'; }
-	return out;
-};
-
-module.exports = {
-	mode: process.env.NODE_ENV,
-	devtool: 'cheap-module-source-map',
-	context: path.resolve(__dirname, 'src'),
-	entry: {
-		main: ['@babel/polyfill', './js/app.js'],
-	},
-	output: output(),
-	optimization: optimization(),
-	plugins: plugins(),
-	module: {
-		rules: [
-			{
-				test: /\.css$/,
-				use: cssLoaders(),
-			},
-			{
-				test: /\.less$/,
-				use: cssLoaders('less-loader'),
-			},
-			{
-				test: /\.s[ac]ss$/,
-				use: cssLoaders('sass-loader'),
-			},
-			{
-				test: /\.(png|jpg|svg|gif)$/,
-				use: [
-					{
-						loader: 'file-loader',
-						options: {
-							name: '[name].[hash].[ext]',
-							outputPath: 'img',
-						},
+// MODULE RULES
+const getModuleRules = () => {
+	const rules = [
+		{
+			test: TEST.SCSS,
+			use: cssLoaders('sass-loader'),
+		},
+		{
+			test: TEST.IMG,
+			use: [
+				{
+					loader: 'file-loader',
+					options: {
+						name: '[name].[hash:8].[ext]',
+						outputPath: PATH.OUTPUT.MEDIA,
 					},
-				],
-			},
-			{
-				test: /\.(woff|woff2|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,
-				use: [
-					{
-						loader: 'file-loader',
-						options: {
-							name: '[name].[ext]',
-							outputPath: 'fonts',
-						},
+				},
+			],
+		},
+		{
+			test: TEST.FONTS,
+			use: [
+				{
+					loader: 'file-loader',
+					options: {
+						name: '[name].[hash:8].[ext]',
+						outputPath: PATH.OUTPUT.FONTS,
 					},
-				],
-			},
-			{
-				test: /\.js$/,
-				exclude: /node_modules/,
-				use: {
-					loader: 'babel-loader',
-					options: babelOptions(),
+				},
+			],
+		},
+		{
+			test: TEST.JS,
+			exclude: /node_modules/,
+			use: {
+				loader: 'babel-loader',
+				options: {
+					presets: ['@babel/preset-env'],
 				},
 			},
-		],
-	},
-	devServer: {
-		contentBase: path.join(__dirname, 'src'),
-		compress: true,
-		port: 3001,
-		hot: true,
-		watchContentBase: true,
-		noInfo: true,
-	},
+		},
+	];
+	return rules;
 };
+
+// SERVER
+const getServer = () => {
+	const server = {
+		watchContentBase: true,
+		compress: true,
+		port: 4001,
+		hot: true,
+		noInfo: true,
+	};
+	return server;
+};
+
+// ======================================================================================
+
+const CONFIG = {
+	mode: MODE.CURRENT,
+	devtool: MODE.isPRODUCTION ? 'source-map' : 'cheap-module-source-map',
+	entry: {
+		main: PATH.ENTRY.MAIN,
+	},
+	output: {
+		path: PATH.OUTPUT.DIR,
+		filename: PATH.OUTPUT.JS.NAME,
+		chunkFilename: PATH.OUTPUT.JS.CHUCK,
+	},
+	plugins: getPlugins(),
+	module: {
+		rules: getModuleRules(),
+	},
+	devServer: getServer(),
+};
+
+if (MODE.isPRODUCTION) {
+	CONFIG.output.publicPath = './';
+	CONFIG.optimization = {
+		splitChunks: {
+			chunks: 'all',
+		},
+		minimizer: [
+			new TerserWebpackPlugin(),
+			new OptimizeCssAssetsPlugin({
+				cssProcessorOptions: { discardComments: { removeAll: true } },
+			}),
+		],
+	};
+}
+
+// ======================================================================================
+
+module.exports = CONFIG;
+
+// ======================================================================================
+
+/*
+	rimraf - to remove a directory
+	cross-env - converts commands for the operating system
+	webpack-dev-server - development server
+*/
