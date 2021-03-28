@@ -1,6 +1,6 @@
 {
-	"name": "template",
-	"version": "2.0.0",
+	"name": "webpack-boilerplate",
+	"version": "2.1.0",
 	"description": "",
 	"private": true,
 	"scripts": {
